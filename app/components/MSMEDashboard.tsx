@@ -4,7 +4,6 @@ import React, { useState } from "react";
 import { InvoiceRecord } from "@/lib/types";
 import { formatINR } from "@/lib/web3";
 import {
-  FileText,
   CheckCircle2,
   Lock,
   Unlock,
@@ -13,7 +12,8 @@ import {
   ShieldAlert,
   Wallet,
   Sparkles,
-  QrCode
+  Zap,
+  Clock,
 } from "lucide-react";
 
 interface MSMEDashboardProps {
@@ -27,10 +27,12 @@ export default function MSMEDashboard({
   invoice,
   onUpdateInvoice,
   onTriggerDisbursal,
-  setActiveTab
+  setActiveTab,
 }: MSMEDashboardProps) {
-  const [selectedTiers, setSelectedTiers] = useState<number[]>([0, 1, 2]); // Ramesh selected T0, T1, T2
+  // Initially, Tier 0, 1, 2 selected (matches Ramesh's pitch narrative)
+  const [selectedTiers, setSelectedTiers] = useState<number[]>([0, 1, 2]);
   const [isDepositing, setIsDepositing] = useState(false);
+  const [isDisbursing, setIsDisbursing] = useState(false);
 
   // Dynamic calculations based on selected tiers
   const activeTiers = invoice.tranches.filter((t) => selectedTiers.includes(t.tierIndex));
@@ -40,7 +42,9 @@ export default function MSMEDashboard({
   const netDisbursal = totalAdvance - totalDiscount;
 
   const handleToggleTier = (tierIndex: number) => {
-    if (tierIndex === 0) return; // Tier 0 is always enabled for eligible MSME
+    if (tierIndex === 0) return; // Tier 0 is always uncollateralized and enabled
+    if (invoice.status === "DISBURSED" || invoice.status === "SETTLED") return; // locked after disbursal
+
     let updated: number[];
     if (selectedTiers.includes(tierIndex)) {
       updated = selectedTiers.filter((t) => t !== tierIndex);
@@ -63,6 +67,14 @@ export default function MSMEDashboard({
         status: "COLLATERAL_POSTED",
       });
     }, 1200);
+  };
+
+  const handleClaimDisbursal = () => {
+    setIsDisbursing(true);
+    setTimeout(() => {
+      setIsDisbursing(false);
+      onTriggerDisbursal();
+    }, 1000);
   };
 
   return (
@@ -148,7 +160,19 @@ export default function MSMEDashboard({
             )}
           </div>
 
-          <div className="mt-6 pt-4 border-t border-white/5 flex gap-2">
+          <div className="mt-6 pt-4 border-t border-white/5 space-y-2">
+            {/* Direct Disbursal Trigger Button */}
+            {!invoice.payoutUtr && invoice.status !== "SETTLED" && invoice.status !== "DEFAULTED" && (
+              <button
+                onClick={handleClaimDisbursal}
+                disabled={isDisbursing}
+                className="w-full py-2.5 px-4 rounded-xl bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white font-bold text-xs flex items-center justify-center gap-1.5 shadow-lg shadow-emerald-600/20 transition-all disabled:opacity-50"
+              >
+                <Zap className="w-3.5 h-3.5" />
+                {isDisbursing ? "Initiating NPCI UPI Rail..." : `Claim Instant UPI Advance (${formatINR(netDisbursal)})`}
+              </button>
+            )}
+
             <button
               onClick={() => setActiveTab("investor")}
               className="w-full py-2.5 px-4 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white font-medium text-xs flex items-center justify-center gap-1.5 transition-colors"
@@ -168,7 +192,7 @@ export default function MSMEDashboard({
               Interactive Tier Ladder: Unlock Cheaper Capital with Margin
             </h3>
             <p className="text-xs text-slate-400 mt-0.5">
-              Select which slices of your ₹5,00,000 invoice to fund. Tier 0 is always uncollateralized. Each higher tier unlocks cheaper interest rates as you post margin.
+              Select which slices of your {formatINR(invoice.faceValueINR)} invoice to fund. Tier 0 is always uncollateralized. Each higher tier unlocks cheaper interest rates as you post margin.
             </p>
           </div>
 
@@ -250,9 +274,9 @@ export default function MSMEDashboard({
               <ShieldAlert className="w-4 h-4" />
             </div>
             <div>
-              <span className="text-xs font-semibold text-white">10% Statutory Reserve: ₹50,000</span>
+              <span className="text-xs font-semibold text-white">10% Statutory Reserve: {formatINR(invoice.reserveINR || 50000)}</span>
               <p className="text-xs text-slate-400">
-                Retained in smart contract until Tata Motors pays on Day 90, then instantly transferred to Ramesh.
+                Retained in smart contract until {invoice.buyerName} pays on Day {invoice.tenureDays}, then instantly released to Ramesh.
               </p>
             </div>
           </div>
@@ -260,12 +284,14 @@ export default function MSMEDashboard({
           {/* Action Button: Post Collateral to Vault */}
           <button
             onClick={handlePostCollateral}
-            disabled={isDepositing}
-            className="px-5 py-2.5 rounded-xl bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white font-semibold text-xs flex items-center gap-2 shadow-md transition-all"
+            disabled={isDepositing || invoice.status === "DISBURSED" || invoice.status === "SETTLED"}
+            className="px-5 py-2.5 rounded-xl bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 disabled:opacity-50 text-white font-semibold text-xs flex items-center gap-2 shadow-md transition-all"
           >
             <Wallet className="w-4 h-4" />
             {isDepositing
               ? "Locking Margin in Smart Vault..."
+              : invoice.collateralDepositedINR > 0
+              ? `Margin Locked (${formatINR(invoice.collateralDepositedINR)}) ✓`
               : `Post Margin (${formatINR(totalCollateral)}) & Lock Slices`}
           </button>
         </div>

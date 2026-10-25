@@ -36,10 +36,18 @@ async function main() {
   const waterfallAddress = await waterfall.getAddress();
   console.log("WaterfallSettlement deployed to:", waterfallAddress);
 
-  // 5. Wire authorities
+  // 5. Deploy CBDCMockToken (Digital Rupee Rail)
+  const CBDCToken = await hre.ethers.getContractFactory("CBDCMockToken");
+  const cbdcToken = await CBDCToken.deploy();
+  await cbdcToken.waitForDeployment();
+  const cbdcTokenAddress = await cbdcToken.getAddress();
+  console.log("CBDCMockToken (eINR) deployed to:", cbdcTokenAddress);
+
+  // 6. Wire authorities
   console.log("Configuring cross-contract permissions...");
   await trancheToken.setAuthorities(deployer.address, waterfallAddress);
   await collateralVault.setWaterfallContract(waterfallAddress);
+  await cbdcToken.setOrchestrator(deployer.address);
 
   console.log("\nDeployment completed successfully!");
   console.log("-----------------------------------------");
@@ -47,6 +55,7 @@ async function main() {
   console.log(`NEXT_PUBLIC_TRANCHE_TOKEN_ADDRESS="${trancheTokenAddress}"`);
   console.log(`NEXT_PUBLIC_COLLATERAL_VAULT_ADDRESS="${collateralVaultAddress}"`);
   console.log(`NEXT_PUBLIC_WATERFALL_ADDRESS="${waterfallAddress}"`);
+  console.log(`NEXT_PUBLIC_CBDC_TOKEN_ADDRESS="${cbdcTokenAddress}"`);
   console.log("-----------------------------------------");
 }
 

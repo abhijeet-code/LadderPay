@@ -78,8 +78,8 @@ contract WaterfallSettlement {
         uint256[4] memory paidPerTier;
 
         // Repay Senior tranches first: Tier 3 -> Tier 2 -> Tier 1 -> Tier 0
-        for (int8 t = 3; t >= 0; t--) {
-            uint8 tier = uint8(t);
+        for (uint8 i = 0; i < 4; i++) {
+            uint8 tier = 3 - i; // 3, 2, 1, 0
             uint256 trancheId = trancheToken.calculateTrancheId(_invoiceId, tier);
             LadderTrancheToken.TrancheConfig memory config = trancheToken.getTranche(trancheId);
 

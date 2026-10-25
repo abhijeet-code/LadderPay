@@ -20,6 +20,7 @@ export const CONTRACT_ADDRESSES = {
   trancheToken: process.env.NEXT_PUBLIC_TRANCHE_TOKEN_ADDRESS || "0x98A5B7b6a48f79B8C5F6F3Eb03f7a17C0C729112",
   collateralVault: process.env.NEXT_PUBLIC_COLLATERAL_VAULT_ADDRESS || "0x44E67Ea4e98f79B8C5F6F3Eb03f7a17C0C721098",
   waterfallSettlement: process.env.NEXT_PUBLIC_WATERFALL_ADDRESS || "0x12F67Ea4e98f79B8C5F6F3Eb03f7a17C0C728876",
+  cbdcToken: process.env.NEXT_PUBLIC_CBDC_TOKEN_ADDRESS || "0x55B67Ea4e98f79B8C5F6F3Eb03f7a17C0C723344",
 };
 
 export function truncateHash(hash: string, start = 6, end = 4): string {

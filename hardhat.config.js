@@ -1,4 +1,12 @@
-require("@nomicfoundation/hardhat-toolbox");
+// NOTE: Hardhat toolbox must be installed separately:
+//   npm install --save-dev @nomicfoundation/hardhat-toolbox
+// Run contract compilation from the project root:
+//   npx hardhat compile
+try {
+  require("@nomicfoundation/hardhat-toolbox");
+} catch (e) {
+  // Silently skip if not installed (e.g., on Vercel build)
+}
 
 /** @type import('hardhat/config').HardhatUserConfig */
 module.exports = {

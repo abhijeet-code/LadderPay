@@ -28,10 +28,24 @@ app.get("/api/status", (req, res) => {
     orchestrator: "Drunix State Machine",
     rails: {
       npciUPI: "READY",
+      npciCBDC: "ACTIVE_PROGRAMMABLE_ESCROW",
       polygonAmoyTestnet: "CONNECTED",
       sepoliaTestnet: "STANDBY",
     },
     uptime: process.uptime(),
+  });
+});
+
+// Digital Rupee (CBDC) purpose-bound margin lock webhook
+app.post("/api/npci/cbdc/lock", (req, res) => {
+  const { invoiceId, msmeWallet, marginINR } = req.body;
+  const lockHash = "0x" + Math.random().toString(16).substring(2, 42);
+  console.log(`[Drunix] CBDC margin lock: ₹${marginINR} locked for invoice ${invoiceId}`);
+  res.json({
+    success: true,
+    lockHash,
+    rail: "NPCI_DIGITAL_RUPEE_CBDC",
+    status: "MARGIN_HELD_IN_ESCROW",
   });
 });
 

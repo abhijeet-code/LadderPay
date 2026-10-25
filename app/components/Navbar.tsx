@@ -1,15 +1,30 @@
 "use client";
 
-import React from "react";
-import { Layers, ShieldCheck, Zap, Activity } from "lucide-react";
+import React, { useState } from "react";
+import { Layers, ShieldCheck, Zap, Activity, Menu, X } from "lucide-react";
 
 interface NavbarProps {
   activeTab: "msme" | "investor" | "buyer" | "drunix";
   setActiveTab: (tab: "msme" | "investor" | "buyer" | "drunix") => void;
   onOpenDefaultModal: () => void;
+  hasInvoice: boolean;
 }
 
-export default function Navbar({ activeTab, setActiveTab, onOpenDefaultModal }: NavbarProps) {
+export default function Navbar({ activeTab, setActiveTab, onOpenDefaultModal, hasInvoice }: NavbarProps) {
+  const [mobileOpen, setMobileOpen] = useState(false);
+
+  const tabs = [
+    { key: "msme" as const, label: "MSME Portal", icon: null },
+    { key: "investor" as const, label: "Investor Marketplace", icon: null },
+    { key: "buyer" as const, label: "Buyer Portal", icon: null },
+    { key: "drunix" as const, label: "Drunix Visualizer", icon: <Activity className="w-3.5 h-3.5 text-cyan-400" /> },
+  ];
+
+  const handleTabClick = (tab: "msme" | "investor" | "buyer" | "drunix") => {
+    setActiveTab(tab);
+    setMobileOpen(false);
+  };
+
   return (
     <header className="sticky top-0 z-50 w-full border-b border-white/10 bg-[#090d16]/90 backdrop-blur-md">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
@@ -21,70 +36,49 @@ export default function Navbar({ activeTab, setActiveTab, onOpenDefaultModal }: 
           <div>
             <div className="flex items-center gap-2">
               <span className="font-extrabold text-xl tracking-tight text-white">Ladder<span className="text-indigo-400">Pay</span></span>
-              <span className="px-2 py-0.5 text-[10px] font-semibold tracking-wider uppercase rounded-full bg-indigo-500/10 text-indigo-400 border border-indigo-500/30">
+              <span className="hidden sm:inline px-2 py-0.5 text-[10px] font-semibold tracking-wider uppercase rounded-full bg-indigo-500/10 text-indigo-400 border border-indigo-500/30">
                 Hackathon Prototype
               </span>
             </div>
-            <p className="text-[11px] text-slate-400">Tiered, Collateral-Aware Invoice Financing</p>
+            <p className="hidden sm:block text-[11px] text-slate-400">Tiered, Collateral-Aware Invoice Financing</p>
           </div>
         </div>
 
-        {/* Tab Navigation */}
-        <nav className="hidden md:flex items-center gap-1 bg-slate-900/80 p-1 rounded-xl border border-white/5">
-          <button
-            onClick={() => setActiveTab("msme")}
-            className={`px-3.5 py-1.5 rounded-lg text-xs font-medium transition-all ${
-              activeTab === "msme"
-                ? "bg-indigo-600 text-white shadow"
-                : "text-slate-400 hover:text-white hover:bg-slate-800/50"
-            }`}
-          >
-            MSME Portal (Ramesh)
-          </button>
-          <button
-            onClick={() => setActiveTab("investor")}
-            className={`px-3.5 py-1.5 rounded-lg text-xs font-medium transition-all ${
-              activeTab === "investor"
-                ? "bg-indigo-600 text-white shadow"
-                : "text-slate-400 hover:text-white hover:bg-slate-800/50"
-            }`}
-          >
-            Investor Marketplace
-          </button>
-          <button
-            onClick={() => setActiveTab("buyer")}
-            className={`px-3.5 py-1.5 rounded-lg text-xs font-medium transition-all ${
-              activeTab === "buyer"
-                ? "bg-indigo-600 text-white shadow"
-                : "text-slate-400 hover:text-white hover:bg-slate-800/50"
-            }`}
-          >
-            Buyer Portal (Tata Motors)
-          </button>
-          <button
-            onClick={() => setActiveTab("drunix")}
-            className={`px-3.5 py-1.5 rounded-lg text-xs font-medium flex items-center gap-1.5 transition-all ${
-              activeTab === "drunix"
-                ? "bg-cyan-600 text-white shadow"
-                : "text-slate-400 hover:text-white hover:bg-slate-800/50"
-            }`}
-          >
-            <Activity className="w-3.5 h-3.5 text-cyan-400" />
-            Drunix Live Visualizer
-          </button>
-        </nav>
+        {/* Desktop Tab Navigation */}
+        {hasInvoice && (
+          <nav className="hidden md:flex items-center gap-1 bg-slate-900/80 p-1 rounded-xl border border-white/5">
+            {tabs.map((tab) => (
+              <button
+                key={tab.key}
+                onClick={() => handleTabClick(tab.key)}
+                className={`px-3.5 py-1.5 rounded-lg text-xs font-medium flex items-center gap-1.5 transition-all ${
+                  activeTab === tab.key
+                    ? tab.key === "drunix"
+                      ? "bg-cyan-600 text-white shadow"
+                      : "bg-indigo-600 text-white shadow"
+                    : "text-slate-400 hover:text-white hover:bg-slate-800/50"
+                }`}
+              >
+                {tab.icon}
+                {tab.label}
+              </button>
+            ))}
+          </nav>
+        )}
 
-        {/* Live Status Indicators & Default Demo Button */}
+        {/* Right: Status Badges + Mobile Menu Button */}
         <div className="flex items-center gap-2">
           {/* Default Risk Demo Button */}
-          <button
-            onClick={onOpenDefaultModal}
-            className="hidden sm:inline-flex items-center gap-1.5 px-2.5 py-1 text-xs font-medium rounded-lg bg-rose-500/10 text-rose-300 border border-rose-500/30 hover:bg-rose-500/20 transition-colors"
-            title="Demonstrate risk mitigation: collateral liquidation on buyer default"
-          >
-            <ShieldCheck className="w-3.5 h-3.5 text-rose-400" />
-            Simulate Default
-          </button>
+          {hasInvoice && (
+            <button
+              onClick={onOpenDefaultModal}
+              className="hidden sm:inline-flex items-center gap-1.5 px-2.5 py-1 text-xs font-medium rounded-lg bg-rose-500/10 text-rose-300 border border-rose-500/30 hover:bg-rose-500/20 transition-colors"
+              title="Demonstrate risk mitigation: collateral liquidation on buyer default"
+            >
+              <ShieldCheck className="w-3.5 h-3.5 text-rose-400" />
+              Simulate Default
+            </button>
+          )}
 
           {/* NPCI UPI Status */}
           <div className="hidden lg:flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-emerald-500/10 border border-emerald-500/20 text-[11px] text-emerald-400 font-mono">
@@ -93,12 +87,51 @@ export default function Navbar({ activeTab, setActiveTab, onOpenDefaultModal }: 
           </div>
 
           {/* Testnet Badge */}
-          <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-purple-500/10 border border-purple-500/20 text-[11px] text-purple-300 font-mono">
+          <div className="hidden sm:flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-purple-500/10 border border-purple-500/20 text-[11px] text-purple-300 font-mono">
             <div className="w-1.5 h-1.5 rounded-full bg-purple-400 animate-pulse" />
-            Polygon Amoy (Free EVM)
+            Polygon Amoy
           </div>
+
+          {/* Mobile Hamburger */}
+          {hasInvoice && (
+            <button
+              onClick={() => setMobileOpen(!mobileOpen)}
+              className="md:hidden p-2 rounded-lg bg-slate-800/80 text-slate-300 hover:text-white border border-white/10"
+            >
+              {mobileOpen ? <X className="w-4 h-4" /> : <Menu className="w-4 h-4" />}
+            </button>
+          )}
         </div>
       </div>
+
+      {/* Mobile Dropdown Menu */}
+      {mobileOpen && hasInvoice && (
+        <div className="md:hidden border-t border-white/5 bg-[#090d16]/95 backdrop-blur-md">
+          <div className="max-w-7xl mx-auto px-4 py-3 space-y-1">
+            {tabs.map((tab) => (
+              <button
+                key={tab.key}
+                onClick={() => handleTabClick(tab.key)}
+                className={`w-full px-4 py-2.5 rounded-xl text-sm font-medium flex items-center gap-2 transition-all ${
+                  activeTab === tab.key
+                    ? "bg-indigo-600 text-white"
+                    : "text-slate-400 hover:text-white hover:bg-slate-800/50"
+                }`}
+              >
+                {tab.icon}
+                {tab.label}
+              </button>
+            ))}
+            <button
+              onClick={() => { onOpenDefaultModal(); setMobileOpen(false); }}
+              className="w-full px-4 py-2.5 rounded-xl text-sm font-medium flex items-center gap-2 text-rose-300 hover:bg-rose-500/10"
+            >
+              <ShieldCheck className="w-4 h-4 text-rose-400" />
+              Simulate Default
+            </button>
+          </div>
+        </div>
+      )}
     </header>
   );
 }
